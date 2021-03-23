@@ -15,7 +15,7 @@ async function main() {
 
   // We get the contract to deploy
   const SampleERC721 = await hre.ethers.getContractFactory("SampleERC721");
-  const sample = await SampleERC721.deploy("ZOM", "ZOMBIE");
+  const sample = await SampleERC721.deploy("ZOM", "ZOMBIE", "https://ipfs.io/ipfs/");
 
   await sample.deployed();
 
