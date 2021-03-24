@@ -27,7 +27,7 @@ import "../openzeppelin-contracts/contracts/utils/Counters.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract NRC7PresetURI is Context, AccessControlEnumerable, ERC721Enumerable, ERC721Burnable, ERC721Pausable, ERC721URIStorage {
+contract NRC7Full is Context, AccessControlEnumerable, ERC721Enumerable, ERC721Burnable, ERC721Pausable, ERC721URIStorage {
     using Counters for Counters.Counter;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -58,7 +58,7 @@ contract NRC7PresetURI is Context, AccessControlEnumerable, ERC721Enumerable, ER
     }
     
     function setBaseURI(string calldata newBaseTokenURI) public {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "NRC7PresetURI: must have admin role to set");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "NRC7Full: must have admin role to set");
         _baseTokenURI = newBaseTokenURI;
     }
     
@@ -70,7 +70,7 @@ contract NRC7PresetURI is Context, AccessControlEnumerable, ERC721Enumerable, ER
     }
 
     function setTokenURI(uint256 tokenId, string memory _tokenURI) public {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "NRC7PresetURI: must have admin role to set");
+        require(hasRole(MINTER_ROLE, _msgSender()), "NRC7Full: must have minter role to set");
         _setTokenURI(tokenId, _tokenURI);
     }
 
@@ -93,11 +93,20 @@ contract NRC7PresetURI is Context, AccessControlEnumerable, ERC721Enumerable, ER
      * - the caller must have the `MINTER_ROLE`.
      */
     function mint(address to) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NRC7PresetURI: must have minter role to mint");
+        require(hasRole(MINTER_ROLE, _msgSender()), "NRC7Full: must have minter role to mint");
 
         // We cannot just use balanceOf to create the new tokenId because tokens
         // can be burned (destroyed), so we need a separate counter.
         _mint(to, _tokenIdTracker.current());
+        _tokenIdTracker.increment();
+    }
+    function mintWithTokenURI(address to, string memory _tokenURI) public {
+        require(hasRole(MINTER_ROLE, _msgSender()), "NRC7Full: must have minter role to mint");
+
+        // We cannot just use balanceOf to create the new tokenId because tokens
+        // can be burned (destroyed), so we need a separate counter.
+        _mint(to, _tokenIdTracker.current());
+        _setTokenURI(_tokenIdTracker.current(), _tokenURI);
         _tokenIdTracker.increment();
     }
 
@@ -111,7 +120,7 @@ contract NRC7PresetURI is Context, AccessControlEnumerable, ERC721Enumerable, ER
      * - the caller must have the `PAUSER_ROLE`.
      */
     function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "NRC7PresetURI: must have pauser role to pause");
+        require(hasRole(PAUSER_ROLE, _msgSender()), "NRC7Full: must have pauser role to pause");
         _pause();
     }
 
@@ -125,7 +134,7 @@ contract NRC7PresetURI is Context, AccessControlEnumerable, ERC721Enumerable, ER
      * - the caller must have the `PAUSER_ROLE`.
      */
     function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "NRC7PresetURI: must have pauser role to unpause");
+        require(hasRole(PAUSER_ROLE, _msgSender()), "NRC7Full: must have pauser role to unpause");
         _unpause();
     }
 
@@ -146,5 +155,19 @@ contract NRC7PresetURI is Context, AccessControlEnumerable, ERC721Enumerable, ER
      */
     function _burn(uint256 tokenId) internal virtual override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
+    }
+
+
+   /**
+   * @dev Gets the list of all token IDs assigned to an address
+   * Try NOT to use this function
+   * @param owner address The owner whose token we are interested in
+   * @return ownerTokens Returns a list of all token IDs assigned to an address
+   */ 
+    function tokensOfOwner(address owner) public view returns(uint256[] memory ownerTokens) {
+        uint256 length = ERC721.balanceOf(owner);
+        for (uint256 i = 0;i<length;i++) {
+            ownerTokens[i] = ERC721Enumerable.tokenOfOwnerByIndex(owner, i);
+        }
     }
 }
