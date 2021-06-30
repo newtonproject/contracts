@@ -27,13 +27,12 @@ import "../openzeppelin-contracts/contracts/utils/Counters.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract NRC7Full is Context, AccessControlEnumerable, ERC721Enumerable, ERC721Burnable, ERC721Pausable, ERC721URIStorage {
+contract NRC7FullPublic is Context, AccessControlEnumerable, ERC721Enumerable, ERC721Burnable, ERC721Pausable, ERC721URIStorage {
     using Counters for Counters.Counter;
 
-    string public constant NEWTON_CONTRACT_NAME = "NRC7Full";
-    string public constant NEWTON_CONTRACT_VERSION = "1.1.0";
+    string public constant NEWTON_CONTRACT_NAME = "NRC7FullPublic";
+    string public constant NEWTON_CONTRACT_VERSION = "1.0.0";
 
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     Counters.Counter private _tokenIdTracker;
@@ -52,7 +51,6 @@ contract NRC7Full is Context, AccessControlEnumerable, ERC721Enumerable, ERC721B
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
-        _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
     }
 
@@ -91,16 +89,12 @@ contract NRC7Full is Context, AccessControlEnumerable, ERC721Enumerable, ERC721B
      * - the caller must have the `MINTER_ROLE`.
      */
     function mint(address to) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NRC7Full: must have minter role to mint");
-
         // We cannot just use balanceOf to create the new tokenId because tokens
         // can be burned (destroyed), so we need a separate counter.
         _mint(to, _tokenIdTracker.current());
         _tokenIdTracker.increment();
     }
     function mintWithTokenURI(address to, string memory _tokenURI) public {
-        require(hasRole(MINTER_ROLE, _msgSender()), "NRC7Full: must have minter role to mint");
-
         // We cannot just use balanceOf to create the new tokenId because tokens
         // can be burned (destroyed), so we need a separate counter.
         _mint(to, _tokenIdTracker.current());
