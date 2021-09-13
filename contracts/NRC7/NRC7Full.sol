@@ -11,6 +11,8 @@ import "../openzeppelin-contracts/contracts/access/AccessControlEnumerable.sol";
 import "../openzeppelin-contracts/contracts/utils/Context.sol";
 import "../openzeppelin-contracts/contracts/utils/Counters.sol";
 
+import "./introspection/ERC2981ContractWideRoyalties.sol";
+
 /**
  * @dev {ERC721} token, including:
  *
@@ -27,11 +29,11 @@ import "../openzeppelin-contracts/contracts/utils/Counters.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract NRC7Full is Context, AccessControlEnumerable, ERC721Enumerable, ERC721Burnable, ERC721Pausable, ERC721URIStorage {
+contract NRC7Full is Context, AccessControlEnumerable, ERC721Enumerable, ERC721Burnable, ERC721Pausable, ERC721URIStorage, ERC2981ContractWideRoyalties {
     using Counters for Counters.Counter;
 
     string public constant NEWTON_CONTRACT_NAME = "NRC7Full";
-    string public constant NEWTON_CONTRACT_VERSION = "1.1.0";
+    string public constant NEWTON_CONTRACT_VERSION = "1.2.0";
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -58,6 +60,10 @@ contract NRC7Full is Context, AccessControlEnumerable, ERC721Enumerable, ERC721B
 
     function _baseURI() internal view virtual override returns (string memory) {
         return _baseTokenURI;
+    }
+    
+    function baseURI() public view returns (string memory) {
+        return _baseURI();
     }
 
     function setBaseURI(string calldata newBaseTokenURI) public {
@@ -136,6 +142,14 @@ contract NRC7Full is Context, AccessControlEnumerable, ERC721Enumerable, ERC721B
         _unpause();
     }
 
+    function setTokenRoyalty(
+        address recipient,
+        uint256 value
+    ) public {        
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "NRC7Full: must have admin role to set");
+        _setRoyalties(recipient, value);
+    }
+
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override(ERC721, ERC721Enumerable, ERC721Pausable) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
@@ -143,7 +157,7 @@ contract NRC7Full is Context, AccessControlEnumerable, ERC721Enumerable, ERC721B
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControlEnumerable, ERC721, ERC721Enumerable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControlEnumerable, ERC2981ContractWideRoyalties, ERC721, ERC721Enumerable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
