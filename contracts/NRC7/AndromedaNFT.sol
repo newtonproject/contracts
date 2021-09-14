@@ -944,7 +944,6 @@ contract AndromedaNFT is ERC721 {
     uint256 public token_count = 0; // total count of token
     
     mapping(uint256 => string) _token_hash; // ipfs hash for token[id]
-    mapping(string => bool) _hash_exists;
     mapping(uint256 => uint256) public id2BlockNumber;
     mapping(uint256 => address) public id2Creator;
 
@@ -954,21 +953,6 @@ contract AndromedaNFT is ERC721 {
         
     }
 
-
-    function mintItem(string memory URI)  public  returns (uint256) {
-        uint256 id = token_count;
-        token_count += 1;
-
-        _token_hash[id] = URI;
-        _safeMint(msg.sender, id);
-
-        id2BlockNumber[id] = block.number;
-
-        id2Creator[id] = msg.sender;
-
-        return id;
-    }
-    
     function mintItemTo(address to, string memory URI)  public  returns (uint256) {
         uint256 id = token_count;
         token_count += 1;
@@ -983,20 +967,28 @@ contract AndromedaNFT is ERC721 {
         return id;
     }
     
-    function batchMintItem(uint256 n, string memory URI)  public returns (bool) {
+    function mintItem(string memory URI)  public  returns (uint256) {
+        return mintItemTo(msg.sender, URI);
+    }
+    
+    function batchMintItemTo(address to, uint256 n, string memory URI)  public returns (bool) {
         for (uint i = 0; i < n; i=i+1) {
             uint256 id = token_count + 1;
             token_count += 1;
     
             _token_hash[id] = URI;
-            _safeMint(msg.sender, id);
+            _safeMint(to, id);
     
             id2BlockNumber[id] = block.number;
     
-            id2Creator[id] = msg.sender;
+            id2Creator[id] = to;
         }
         
         return true;
+    }
+    
+    function batchMintItem(uint256 n, string memory URI)  public returns (bool) {
+        return batchMintItemTo(msg.sender, n, URI);
     }
 
     function batchTransfer(address to, uint256[] memory ids)  public  returns (bool) {
@@ -1006,7 +998,6 @@ contract AndromedaNFT is ERC721 {
         
         return true;
     }
-
 
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
