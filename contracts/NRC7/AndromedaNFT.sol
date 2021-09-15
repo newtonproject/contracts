@@ -973,7 +973,7 @@ contract AndromedaNFT is ERC721 {
     
     function batchMintItemTo(address to, uint256 n, string memory URI)  public returns (bool) {
         for (uint i = 0; i < n; i=i+1) {
-            uint256 id = token_count + 1;
+            uint256 id = token_count;
             token_count += 1;
     
             _token_hash[id] = URI;
